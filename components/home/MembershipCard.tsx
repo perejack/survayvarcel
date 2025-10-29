@@ -1,23 +1,25 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, type ColorValue } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Colors from '@/constants/Colors';
 import Layout from '@/constants/Layout';
 import { Award, ChevronRight } from 'lucide-react-native';
 
+type MembershipTier = 'Basic' | 'Premium' | 'Elite';
+
 interface MembershipCardProps {
-  tier: 'Basic' | 'Premium' | 'Elite';
+  tier: MembershipTier;
   onPress: () => void;
 }
 
 export default function MembershipCard({ tier, onPress }: MembershipCardProps) {
-  const membershipColors = {
+  const membershipColors: Record<MembershipTier, [ColorValue, ColorValue]> = {
     Basic: ['#7380c2', '#6C63FF'],
     Premium: ['#4ECDC4', '#26A69A'],
-    Elite: ['#F97316', '#F59E0B']
+    Elite: ['#F97316', '#F59E0B'],
   };
 
-  const tierBenefits = {
+  const tierBenefits: Record<MembershipTier, string> = {
     Basic: 'Up to KES 250 per survey',
     Premium: 'Up to KES 1,000 per survey',
     Elite: 'Up to KES 500 per survey'
