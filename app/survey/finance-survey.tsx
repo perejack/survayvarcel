@@ -1,11 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
 import Colors from '@/constants/Colors';
 import Layout from '@/constants/Layout';
 import { ArrowLeft, ArrowRight, Clock, DollarSign, Check } from 'lucide-react-native';
 // Using local implementation instead of trying to import a non-existent store
-import { useCallback } from 'react';
 const useUserAccount = () => {
   // Mock implementation that mimics the user account store behavior
   return {
@@ -22,7 +21,24 @@ import Animated, { useSharedValue, useAnimatedStyle, withTiming, withSequence, w
 // Finance Survey - Regular Survey (100 KSH)
 // This is a category-specific implementation to avoid pricing issues
 
-const sampleFinanceQuestions = [
+type QuestionType = 'single-choice' | 'multiple-choice';
+
+type QuestionOption = {
+  id: string;
+  text: string;
+};
+
+type SurveyQuestion = {
+  id: string;
+  text: string;
+  type: QuestionType;
+  options: QuestionOption[];
+  required: boolean;
+};
+
+type AnswersState = Record<string, string | string[]>;
+
+const sampleFinanceQuestions: SurveyQuestion[] = [
   {
     id: 'q1',
     text: 'What payment methods do you prefer when shopping online?',
@@ -98,24 +114,24 @@ export default function FinanceSurveyScreen() {
   const { hasUserAccount, setHasUserAccount } = useUserAccount();
   
   // State variables
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState({});
-  const [timeLeft, setTimeLeft] = useState(600); // 10 minutes in seconds
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
+  const [answers, setAnswers] = useState<AnswersState>({});
+  const [timeLeft, setTimeLeft] = useState<number>(600); // 10 minutes in seconds
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   
   // Animation values
-  const fadeAnim = useSharedValue(1);
-  const slideAnim = useSharedValue(0);
+  const fadeAnim = useSharedValue<number>(1);
+  const slideAnim = useSharedValue<number>(0);
   
   // Timer effect
   useEffect(() => {
     const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
+      setTimeLeft((prevTime: number) => {
+        if (prevTime <= 1) {
           clearInterval(timer);
           return 0;
         }
-        return prev - 1;
+        return prevTime - 1;
       });
     }, 1000);
     
@@ -136,26 +152,32 @@ export default function FinanceSurveyScreen() {
   const currentQuestion = sampleFinanceQuestions[currentQuestionIndex];
   
   // Handlers for different question types
-  const handleSingleChoice = (optionId) => {
-    setAnswers({ ...answers, [currentQuestion.id]: optionId });
+  const handleSingleChoice = (optionId: string) => {
+    setAnswers((prevAnswers: AnswersState) => ({
+      ...prevAnswers,
+      [currentQuestion.id]: optionId,
+    }));
   };
   
-  const handleMultipleChoice = (optionId) => {
-    const currentSelections = answers[currentQuestion.id] || [];
-    
-    if (currentSelections.includes(optionId)) {
-      // Remove option if already selected
-      setAnswers({
-        ...answers,
-        [currentQuestion.id]: currentSelections.filter(id => id !== optionId)
-      });
-    } else {
+  const handleMultipleChoice = (optionId: string) => {
+    setAnswers((prevAnswers: AnswersState) => {
+      const existingAnswer = prevAnswers[currentQuestion.id];
+      const currentSelections = Array.isArray(existingAnswer) ? existingAnswer : [];
+
+      if (currentSelections.includes(optionId)) {
+        // Remove option if already selected
+        return {
+          ...prevAnswers,
+          [currentQuestion.id]: currentSelections.filter((id) => id !== optionId),
+        };
+      }
+
       // Add option if not already selected
-      setAnswers({
-        ...answers,
-        [currentQuestion.id]: [...currentSelections, optionId]
-      });
-    }
+      return {
+        ...prevAnswers,
+        [currentQuestion.id]: [...currentSelections, optionId],
+      };
+    });
   };
   
   // Check if the current question has been answered
@@ -167,10 +189,10 @@ export default function FinanceSurveyScreen() {
     }
     
     if (currentQuestion.type === 'multiple-choice') {
-      return answer.length > 0;
+      return Array.isArray(answer) && answer.length > 0;
     }
     
-    return true;
+    return typeof answer === 'string' && answer.length > 0;
   };
   
   // Navigate to the next question with animation
@@ -217,7 +239,8 @@ export default function FinanceSurveyScreen() {
   // Render options based on question type
   const renderOptions = () => {
     if (currentQuestion.type === 'single-choice') {
-      return currentQuestion.options?.map(option => (
+      const currentAnswer = answers[currentQuestion.id];
+      return currentQuestion.options?.map((option: QuestionOption) => (
         <TouchableOpacity
           key={option.id}
           style={[
@@ -244,9 +267,11 @@ export default function FinanceSurveyScreen() {
         </TouchableOpacity>
       ));
     } else if (currentQuestion.type === 'multiple-choice') {
-      const selectedOptions = answers[currentQuestion.id] || [];
+      const selectedOptions = Array.isArray(answers[currentQuestion.id])
+        ? (answers[currentQuestion.id] as string[])
+        : [];
       
-      return currentQuestion.options?.map(option => (
+      return currentQuestion.options?.map((option: QuestionOption) => (
         <TouchableOpacity
           key={option.id}
           style={[
@@ -261,7 +286,7 @@ export default function FinanceSurveyScreen() {
             selectedOptions.includes(option.id) && styles.selectedOptionCheck,
           ]}>
             {selectedOptions.includes(option.id) && (
-              <Check size={16} color="#FFF" />
+              <Check size={16} color={Colors.light.text} />
             )}
           </View>
           <Text style={[
@@ -400,7 +425,7 @@ const styles = StyleSheet.create({
   timerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.light.subtle,
+    backgroundColor: Colors.light.card,
     paddingHorizontal: Layout.spacing.s,
     paddingVertical: Layout.spacing.xs,
     borderRadius: Layout.borderRadius.medium,
@@ -466,7 +491,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.light.border,
     borderRadius: Layout.borderRadius.medium,
-    backgroundColor: Colors.light.cardBackground,
+    backgroundColor: Colors.light.card,
   },
   selectedOption: {
     borderColor: Colors.light.primary,
