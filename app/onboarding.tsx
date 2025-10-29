@@ -32,10 +32,17 @@ const onboardingData = [
   }
 ];
 
+type OnboardingItem = {
+  id: string;
+  title: string;
+  description: string;
+  image: string;
+};
+
 export default function OnboardingScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollX = useRef(new Animated.Value(0)).current;
-  const slidesRef = useRef(null);
+  const slidesRef = useRef<FlatList<OnboardingItem>>(null);
 
   const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
     setCurrentIndex(viewableItems[0]?.index || 0);
@@ -63,7 +70,7 @@ export default function OnboardingScreen() {
       
       <FlatList
         data={onboardingData}
-        renderItem={({ item }) => (
+        renderItem={({ item }: { item: OnboardingItem }) => (
           <View style={styles.slide}>
             <Image source={{ uri: item.image }} style={styles.image} />
             <View style={styles.textContainer}>
@@ -76,7 +83,7 @@ export default function OnboardingScreen() {
         showsHorizontalScrollIndicator={false}
         pagingEnabled
         bounces={false}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item: OnboardingItem) => item.id}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { x: scrollX } } }],
           { useNativeDriver: false }
