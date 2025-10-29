@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { StyleSheet, View, Text, Image, TouchableOpacity, FlatList, Animated } from 'react-native';
+import { StyleSheet, View, Text, Image, TouchableOpacity, FlatList, Animated, ViewToken } from 'react-native';
 import { router } from 'expo-router';
 import Colors from '@/constants/Colors';
 import Layout from '@/constants/Layout';
@@ -37,7 +37,7 @@ export default function OnboardingScreen() {
   const scrollX = useRef(new Animated.Value(0)).current;
   const slidesRef = useRef(null);
 
-  const viewableItemsChanged = useRef(({ viewableItems }) => {
+  const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
     setCurrentIndex(viewableItems[0]?.index || 0);
   }).current;
 
