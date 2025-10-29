@@ -121,9 +121,9 @@ export default function FinancePremiumSurvey1Screen() {
     setShowUpgradeModal(false);
   };
   
-  const handleUpgradeClassic = () => {
+  const handleUpgradeElite = () => {
     // In a real app, this would go to a payment screen
-    console.log('User upgrading to Classic package');
+    console.log('User upgrading to Elite package');
     setAccountType('premium');
     setShowUpgradeModal(false);
   };
@@ -317,16 +317,15 @@ export default function FinancePremiumSurvey1Screen() {
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
-      
-      {/* Premium Packages Upgrade Modal */}
+
       <PackagesModal
         visible={showUpgradeModal}
         onClose={() => setShowUpgradeModal(false)}
         onUpgradeLite={handleUpgradeLite}
-        onUpgradeClassic={handleUpgradeClassic}
+        onUpgradeElite={handleUpgradeElite}
         onContinueBasic={handleContinueBasic}
       />
-      
+
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => router.back()}
@@ -334,10 +333,10 @@ export default function FinancePremiumSurvey1Screen() {
         >
           <ArrowLeft size={24} color={Colors.light.text} />
         </TouchableOpacity>
-        
+
         <View style={styles.timerContainer}>
           <Clock size={16} color={timeLeft < 60 ? Colors.light.error : Colors.light.text} />
-          <Text 
+          <Text
             style={[
               styles.timerText,
               timeLeft < 60 && styles.timerWarning
@@ -346,7 +345,7 @@ export default function FinancePremiumSurvey1Screen() {
             {formatTime(timeLeft)}
           </Text>
         </View>
-        
+
         <View style={styles.rewardContainer}>
           <DollarSign size={20} color={Colors.light.accent} />
           <Text style={styles.rewardText}>
